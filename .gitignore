@@ -1,0 +1,10 @@
+# Channel secrets/tokens/cache -- kabhi git mein push mat karo
+channels/*/config.json
+channels/*/token.json
+channels/*/analytics_cache.json
+!channels/.gitkeep
+
+__pycache__/
+*.pyc
+.venv/
+venv/
