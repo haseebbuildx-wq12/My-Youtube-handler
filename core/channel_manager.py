@@ -114,6 +114,21 @@ def update_channel_credentials(folder_name: str, client_id: str, client_secret: 
         json.dump(config, f, indent=2, ensure_ascii=False)
 
 
+def update_channel_config(folder_name: str, updates: dict):
+    """
+    Config.json mein diye gaye keys ko merge/update karta hai.
+    Har naya feature (tiktok_profiles, settings, etc.) isi ek
+    function se apna data save kar sakta hai -- alag save-function
+    baar baar likhne ki zaroorat nahi.
+    """
+    config = load_channel_config(folder_name)
+    if config is None:
+        return
+    config.update(updates)
+    with open(os.path.join(channel_dir(folder_name), "config.json"), "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=2, ensure_ascii=False)
+
+
 def delete_channel(folder_name: str):
     """Poora channel folder (config, token, cache) delete kar deta hai."""
     folder_path = channel_dir(folder_name)

@@ -29,10 +29,10 @@ RANGE_OPTIONS = {
 # ENTRY POINT -- ui_channel_form.py isi ko call karta hai
 # ============================================================
 def render(channel_folder: str, channel_folder_path: str, config: dict):
-    theme.feature_head(
-        "📊", "Channel Analytics",
-        "Views, subscribers aur video performance ka poora dashboard.",
-    )
+    # theme.feature_head(
+    #     "📊", "Channel Analytics",
+    #     "Views, subscribers aur video performance ka poora dashboard.",
+    # )
 
     creds = youtube_auth.load_credentials(channel_folder_path)
     cache = data.load_cache(channel_folder_path)

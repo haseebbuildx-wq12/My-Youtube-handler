@@ -1,13 +1,13 @@
 """
 app.py
 ======
-Sirf UI WIRING yahan hai — tabs generate karna, aur Google se
+Sirf UI WIRING yahan hai — sidebar navigation banana, aur Google se
 OAuth redirect ke baad wapas aane wale ?code=...&state=... ko
 complete karna. Baaki sab logic core/ ke andar files mein hai.
 """
 
 import streamlit as st
-from urllib.parse import unquote 
+
 from core import theme
 from core import channel_manager
 from core import youtube_auth
@@ -21,9 +21,9 @@ theme.inject()
 # ============================================================
 # OAuth redirect completion -- Google se wapas aane par
 # ============================================================
-   # top pe add karo
-
 def _complete_oauth_if_needed():
+    from urllib.parse import unquote
+
     params = st.query_params
     code = params.get("code")
     state = params.get("state")
@@ -37,45 +37,80 @@ def _complete_oauth_if_needed():
                 creds = youtube_auth.exchange_code_for_credentials(flow, code)
                 youtube_auth.save_credentials(channel_manager.channel_dir(pending_channel), creds)
                 st.session_state["oauth_success_channel"] = config.get("channel_name", pending_channel)
+                st.session_state["active_channel"] = pending_channel
+                st.session_state["show_add_channel"] = False
             except Exception as e:
                 st.session_state["oauth_error"] = str(e)
 
         st.query_params.clear()
         st.rerun()
 
+
 _complete_oauth_if_needed()
 
 
 # ============================================================
-# HERO
+# SIDEBAR -- title + channel list + add channel
 # ============================================================
-theme.hero(
-    "📺 Multi-Channel YouTube Manager",
-    "Apne saare YouTube channels ek hi jagah se manage karo — analytics, uploads aur research.",
-)
+channel_folders = channel_manager.list_channels()
+channel_names = {
+    f: channel_manager.load_channel_config(f).get("channel_name", f) for f in channel_folders
+}
 
+# Agar active_channel set nahi hai ya delete ho chuka hai, to default pehla channel
+if channel_folders and st.session_state.get("active_channel") not in channel_folders:
+    st.session_state["active_channel"] = channel_folders[0]
+    st.session_state["show_add_channel"] = False
+
+with st.sidebar:
+    st.markdown("### 📺 Multi-Channel\nYouTube Manager")
+    st.caption("Apne saare YouTube channels ek hi jagah se manage karo.")
+    st.divider()
+
+    if not channel_folders:
+        st.info("Abhi koi channel add nahi hua.")
+    else:
+        for folder in channel_folders:
+            is_active = (
+                st.session_state.get("active_channel") == folder
+                and not st.session_state.get("show_add_channel")
+            )
+            if st.button(
+                channel_names[folder],
+                key=f"nav_{folder}",
+                use_container_width=True,
+                type="primary" if is_active else "secondary",
+            ):
+                st.session_state["active_channel"] = folder
+                st.session_state["show_add_channel"] = False
+                st.rerun()
+
+    st.divider()
+    if st.button(
+        "➕ Add Channel",
+        use_container_width=True,
+        type="primary" if st.session_state.get("show_add_channel") else "secondary",
+    ):
+        st.session_state["show_add_channel"] = True
+        st.rerun()
+
+
+# ============================================================
+# TOP MESSAGES (success / error / delete notices)
+# ============================================================
 if st.session_state.get("oauth_success_channel"):
     st.success(f"✅ '{st.session_state.pop('oauth_success_channel')}' Google se connect ho gaya!")
 if st.session_state.get("oauth_error"):
     st.error(f"❌ Connect nahi ho paya: {st.session_state.pop('oauth_error')}")
 if st.session_state.get("active_channel_deleted"):
-    st.info(f"Channel delete ho gaya.")
+    st.info("Channel delete ho gaya.")
     del st.session_state["active_channel_deleted"]
 
 
 # ============================================================
-# DYNAMIC CHANNEL TABS + "+ Add Channel" (hamesha last)
+# MAIN AREA -- selected channel ka content, ya Add Channel form
 # ============================================================
-channel_folders = channel_manager.list_channels()
-tab_labels = [
-    channel_manager.load_channel_config(f).get("channel_name", f) for f in channel_folders
-] + ["➕ Add Channel"]
-
-tabs = st.tabs(tab_labels)
-
-for tab, folder in zip(tabs[:-1], channel_folders):
-    with tab:
-        render_channel_tab(folder)
-
-with tabs[-1]:
+if st.session_state.get("show_add_channel") or not channel_folders:
     render_add_channel_form()
+else:
+    render_channel_tab(st.session_state["active_channel"])

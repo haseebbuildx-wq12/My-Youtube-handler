@@ -13,34 +13,25 @@ poori app automatically update ho jayegi.
 import streamlit as st
 
 
-# ============================================================
-# DESIGN TOKENS -- sab kuch yahan se nikalta hai. Yahi ek jagah
-# hai jo tumhe rangon/spacing ke liye edit karni padegi.
-# ============================================================
 TOKENS = {
-    # -- Base surfaces (LIGHT theme) --
-    "bg":            "#F5F6FA",   # page background
-    "surface":       "#FFFFFF",   # card background
-    "surface_alt":   "#FAFBFD",   # subtle alternate surface (headers, inputs)
-    "border":        "#E3E6ED",   # card / divider border
+    "bg":            "#F5F6FA",
+    "surface":       "#FFFFFF",
+    "surface_alt":   "#FAFBFD",
+    "border":        "#E3E6ED",
 
-    # -- Text --
-    "text":          "#181B24",   # primary text -- dark, high contrast on white
-    "text_muted":    "#6B7280",   # secondary text
-    "text_faint":    "#9AA1AE",   # tertiary / placeholder
+    "text":          "#181B24",
+    "text_muted":    "#6B7280",
+    "text_faint":    "#9AA1AE",
 
-    # -- Brand gradient (buttons, hero, accents) --
-    "brand_start":   "#FF4D5E",   # red
-    "brand_end":     "#7C3AED",   # purple
+    "brand_start":   "#FF4D5E",
+    "brand_end":     "#7C3AED",
 
-    # -- Stat-card accent colors (rotate through these) --
     "accent_blue":   "#2563EB",
     "accent_teal":   "#0D9488",
     "accent_amber":  "#F59E0B",
     "accent_purple": "#7C3AED",
     "accent_red":    "#EF4444",
 
-    # -- Heatmap (views) -- sequential scale, light -> dark --
     "heat_0":  "#EEF2FA",
     "heat_1":  "#C9DBF7",
     "heat_2":  "#93B9EF",
@@ -48,32 +39,32 @@ TOKENS = {
     "heat_4":  "#2E63C7",
     "heat_5":  "#173C8A",
 
-    # -- Diverging (subscribers gained/lost) --
     "gain":    "#16A34A",
     "gain_bg": "#E7F7ED",
     "loss":    "#DC2626",
     "loss_bg": "#FCEAEA",
     "flat_bg": "#EEF0F4",
 
-    # -- Status --
     "success": "#16A34A",
     "warning": "#D97706",
     "danger":  "#DC2626",
 
-    # -- Radius / shadow --
     "radius":       "14px",
     "radius_sm":    "9px",
     "shadow":       "0 1px 2px rgba(16,24,40,0.04), 0 1px 3px rgba(16,24,40,0.06)",
     "shadow_hover": "0 4px 12px rgba(16,24,40,0.10)",
+
+    # -- Sidebar (dark, professional) --
+    "sidebar_bg":     "#14161F",
+    "sidebar_bg_alt": "#1B1E2A",
+    "sidebar_border": "#272B3A",
+    "sidebar_text":   "#E5E7EF",
+    "sidebar_muted":  "#8A8FA3",
 }
 
-T = TOKENS  # short alias used everywhere below
+T = TOKENS
 
 
-# ============================================================
-# 1) inject() -- ek hi baar app.py ke shuru mein call karo.
-#    Poori app ki base CSS yahan se aati hai.
-# ============================================================
 def inject():
     st.markdown(
         f"""
@@ -84,11 +75,93 @@ def inject():
                          Roboto, Helvetica, Arial, sans-serif;
             color: {T['text']};
         }}
+
         #MainMenu, footer {{visibility: hidden;}}
+
+        header[data-testid="stHeader"] {{
+            visibility: hidden;
+            height: 0;
+        }}
+        div[data-testid="stToolbar"] {{ visibility: hidden; }}
+        div[data-testid="stDecoration"] {{ visibility: hidden; }}
+
+        /* ============================================================
+           SIDEBAR -- dark, professional look, distinct from main area
+           ============================================================ */
+        section[data-testid="stSidebar"] {{
+            min-width: 260px !important;
+            max-width: 260px !important;
+            background: {T['sidebar_bg']} !important;
+            border-right: 1px solid {T['sidebar_border']};
+        }}
+        section[data-testid="stSidebar"] > div {{
+            padding-top: 1.4rem;
+        }}
+        /* Sidebar text (markdown titles/captions) */
+        section[data-testid="stSidebar"] h3 {{
+            color: {T['sidebar_text']} !important;
+            font-size: 1.02rem;
+            margin-bottom: 2px;
+        }}
+        section[data-testid="stSidebar"] p, 
+        section[data-testid="stSidebar"] .stCaption,
+        section[data-testid="stSidebar"] small {{
+            color: {T['sidebar_muted']} !important;
+        }}
+        section[data-testid="stSidebar"] hr {{
+            border-color: {T['sidebar_border']} !important;
+            margin: 14px 0;
+        }}
+
+        /* Sidebar nav buttons -- inactive: flat/ghost, active: gradient */
+        section[data-testid="stSidebar"] .stButton > button {{
+            background: transparent;
+            color: {T['sidebar_muted']};
+            border: 1px solid transparent;
+            box-shadow: none;
+            font-weight: 600;
+            font-size: 0.88rem;
+            text-align: left;
+            justify-content: flex-start;
+            padding: 0.55rem 0.85rem;
+            border-radius: {T['radius_sm']};
+            transition: background 0.12s ease, color 0.12s ease;
+        }}
+        section[data-testid="stSidebar"] .stButton > button:hover {{
+            background: {T['sidebar_bg_alt']};
+            color: {T['sidebar_text']};
+            transform: none;
+            box-shadow: none;
+        }}
+        section[data-testid="stSidebar"] .stButton > button[kind="primary"] {{
+            background: linear-gradient(90deg, {T['brand_start']}, {T['brand_end']});
+            color: #FFFFFF;
+            box-shadow: {T['shadow']};
+        }}
+        section[data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {{
+            background: linear-gradient(90deg, {T['brand_start']}, {T['brand_end']});
+            color: #FFFFFF;
+            box-shadow: {T['shadow_hover']};
+        }}
+        /* "+ Add Channel" ko thoda outlined/dashed rakho taake nav list se
+           visually alag rahe (action vs navigation) */
+        section[data-testid="stSidebar"] .stButton:last-of-type > button {{
+            border: 1px dashed {T['sidebar_border']};
+            background: transparent;
+            color: {T['sidebar_text']};
+        }}
+        section[data-testid="stSidebar"] .stButton:last-of-type > button:hover {{
+            border-color: {T['brand_end']};
+            color: #FFFFFF;
+            background: {T['sidebar_bg_alt']};
+        }}
+
         .block-container {{
-            padding-top: 1.5rem;
+            padding-top: 0.5rem;
             padding-bottom: 3rem;
-            max-width: 1320px;
+            padding-left: 1rem;
+            padding-right: 2rem;
+            max-width: 100%;
         }}
 
         h1, h2, h3, h4 {{ color: {T['text']}; font-weight: 700; }}
@@ -308,7 +381,6 @@ def empty_state(icon: str, message: str):
 
 
 def heat_color(value: float, max_value: float) -> str:
-    """Views heatmap: value ko sequential-scale color mein badalta hai."""
     if max_value <= 0:
         return T["heat_0"]
     ratio = min(value / max_value, 1.0)
@@ -318,7 +390,6 @@ def heat_color(value: float, max_value: float) -> str:
 
 
 def heat_text_color(value: float, max_value: float) -> str:
-    """Dark cell pe likha number white honi chahiye, halke cell pe dark."""
     if max_value <= 0:
         return T["text"]
     ratio = min(value / max_value, 1.0) if max_value else 0
@@ -326,7 +397,6 @@ def heat_text_color(value: float, max_value: float) -> str:
 
 
 def diverging_bg(value: float) -> str:
-    """Subscribers gained/lost calendar ke liye background."""
     if value > 0:
         return T["gain_bg"]
     if value < 0:
